@@ -1,1 +1,1 @@
-#### Demonstrations related pages that are accessible only by direct links
+#### The pages that are accessible only by direct links
