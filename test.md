@@ -4,4 +4,4 @@ layout: default
 permalink: about
 ---
 
-This file is used to test front matter features
+## This file is used to test front matter features
