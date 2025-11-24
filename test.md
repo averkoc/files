@@ -1,12 +1,7 @@
-<details>
-<summary>Click to expand</summary>
+---
+title: ""
+layout: default
+permalink: about
+---
 
-<br>
-
-Your accordion content goes here.  
-It can include **markdown**, images, lists, etc.
-
-* eka
-* toka
-
-</details>
+This file is used to test fron matter features
