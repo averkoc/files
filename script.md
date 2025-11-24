@@ -1,5 +1,3 @@
-# My Jekyll Page
-
 Click the button to see a message:
 
 <button onclick="showMessage()">Click me</button>
