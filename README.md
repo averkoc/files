@@ -1,1 +1,1 @@
-#### The pages that are accessible only by direct links
+#### The pages are accessible only by direct links
