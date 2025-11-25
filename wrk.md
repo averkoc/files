@@ -104,7 +104,7 @@ sudo systemctl start mqtt-sensor.service
 systemctl status mqtt-sensor.service
 journalctl -u mqtt-sensor.service -f
 ````
-## Improved program  
+## Improved program  - emqdemo.py
 ```python
 import time
 import paho.mqtt.client as mqtt
@@ -112,16 +112,16 @@ from bmp280 import BMP280
 import RPi.GPIO as GPIO
 
 # MQTT settings
-BROKER = "broker.emqx.io"
-PORT = 1883
-TOPIC_TEMPERATURE = "/lxweather/temperature"
-TOPIC_PRESSURE = "/lxweather/pressure"
+broker = "broker.emqx.io"
+port = 1883
+topictemperature = "/lxweather/temperature"
+topicpressure = "/lxweather/pressure"
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(16, GPIO.OUT, initial=GPIO.LOW)
 
-# Import SMBus for BMP280 sensor
+# Try to import SMBus
 try:
     from smbus2 import SMBus
 except ImportError:
@@ -130,32 +130,36 @@ except ImportError:
 bus = SMBus(1)
 bmp280 = BMP280(i2c_dev=bus)
 
+
 # ---------------- MQTT CALLBACKS ---------------- #
 
 def on_connect(client, userdata, flags, rc):
-    print("MQTT connected with result code:", rc)
+    print(f"[MQTT] Connected (rc={rc})")
 
 def on_disconnect(client, userdata, rc):
-    print("MQTT disconnected. Reconnecting in 5 seconds…")
+    print("[MQTT] Disconnected → retrying in 5 seconds…")
     time.sleep(5)
 
-# Create MQTT client and set callbacks
+
+# Create MQTT client
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_disconnect = on_disconnect
 
-# Try initial connection, retry until success
+
+# Keep trying initial connection until success
 while True:
     try:
-        print("Connecting to MQTT broker…")
-        client.connect(BROKER, PORT, keepalive=60)
+        print(f"[MQTT] Connecting to {broker}:{port}…")
+        client.connect(broker, port, keepalive=60)
         break
     except Exception as e:
-        print("Connection failed:", e)
+        print("[MQTT] Connect failed:", e)
         time.sleep(5)
 
-# Start background network loop
+# Start loop thread so reconnect works
 client.loop_start()
+
 
 # ---------------- MAIN LOOP ---------------- #
 
@@ -169,26 +173,25 @@ try:
             format_temp = f"{temperature:.2f}"
             format_press = f"{pressure:.2f}"
 
-            # Print to console
-            print(f"Temperature: {format_temp} °C  |  Pressure: {format_press} hPa")
+            # Print to terminal
+            print(f"Temperature: {format_temp} °C | Pressure: {format_press} hPa")
 
-            # Publish
-            client.publish(TOPIC_TEMPERATURE, format_temp)
-            client.publish(TOPIC_PRESSURE, format_press)
+            # Publish MQTT
+            client.publish(topictemperature, format_temp)
+            client.publish(topicpressure, format_press)
 
-        except Exception as sensor_error:
-            print("Sensor read or publish error:", sensor_error)
+        except Exception as err:
+            print("[ERROR] Sensor or MQTT publish error:", err)
 
-        # Wait 5 sec
         time.sleep(5)
 
 except KeyboardInterrupt:
-    print("Shutting down…")
+    print("Stopping (Ctrl-C)…")
 
 finally:
     client.loop_stop()
     GPIO.cleanup()
-    print("Cleanup done.")
+    print("Cleanup done. Exit.")
 ````
 
 
